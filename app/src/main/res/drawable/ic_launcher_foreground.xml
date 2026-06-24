@@ -1,0 +1,44 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background Gear / Clock Ring (White) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,28 A26,26 0 1,1 53.99,28 Z M54,33 A21,21 0 1,0 54.01,33 Z" />
+        
+    <!-- Gear Teeth -->
+    <path android:fillColor="#FFFFFF" android:pathData="M51,21 h6 v7 h-6 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M51,80 h6 v7 h-6 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M21,51 h7 v6 h-7 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M80,51 h7 v6 h-7 z" />
+    
+    <path android:fillColor="#FFFFFF" android:pathData="M30,30 l4,-4 l5,5 l-4,4 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M73,26 l4,4 l-5,5 l-4,-4 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M26,73 l4,-4 l5,5 l-4,4 z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M69,69 l5,-5 l4,4 l-5,5 z" />
+    
+    <!-- Clock Hands inside Gear -->
+    <path
+        android:fillColor="#D1C4E9"
+        android:pathData="M53,35 h2 v19 h-2 z" />
+    <path
+        android:fillColor="#D1C4E9"
+        android:pathData="M54,53 h14 v2 h-14 z" />
+        
+    <!-- Bold Safety Helmet / Hard Hat in front (Yellow and Orange) -->
+    <!-- Helmet Dome -->
+    <path
+        android:fillColor="#FFD600"
+        android:pathData="M38,59 C38,45 70,45 70,59 Z" />
+    <!-- Helmet Ridge -->
+    <path
+        android:fillColor="#FFC400"
+        android:pathData="M51,42 C51,42 54,39 57,42 L57,50 L51,50 Z" />
+    <!-- Helmet Brim -->
+    <path
+        android:fillColor="#FFE082"
+        android:pathData="M32,59 C32,59 54,57 76,59 C77,61 75,61 75,61 L33,61 Z" />
+</vector>

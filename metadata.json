@@ -1,0 +1,6 @@
+{
+  "name": "OT Tracker",
+  "description": "Overtime and worker allocation tracker for Globe Steels with automated worker roster generation from shift images and clean exports to PDF and WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
