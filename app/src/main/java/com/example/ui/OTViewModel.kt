@@ -66,6 +66,9 @@ class OTViewModel(private val repository: OTRepository) : ViewModel() {
     private val _weekLabelSetting = MutableStateFlow("")
     val weekLabelSetting: StateFlow<String> = _weekLabelSetting.asStateFlow()
 
+    private val _darkThemeSetting = MutableStateFlow("system")
+    val darkThemeSetting: StateFlow<String> = _darkThemeSetting.asStateFlow()
+
     init {
         // Set default tracker date to today
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -84,6 +87,13 @@ class OTViewModel(private val repository: OTRepository) : ViewModel() {
         viewModelScope.launch {
             repository.getSetting("week_label").collect { setting ->
                 _weekLabelSetting.value = setting?.value ?: ""
+            }
+        }
+
+        // Observe dark theme setting
+        viewModelScope.launch {
+            repository.getSetting("dark_theme").collect { setting ->
+                _darkThemeSetting.value = setting?.value ?: "system"
             }
         }
     }
@@ -215,6 +225,13 @@ class OTViewModel(private val repository: OTRepository) : ViewModel() {
     fun saveWeekLabel(label: String) {
         viewModelScope.launch {
             repository.insertSetting("week_label", label)
+        }
+    }
+
+    // Dark Theme
+    fun setDarkThemeSetting(theme: String) {
+        viewModelScope.launch {
+            repository.insertSetting("dark_theme", theme)
         }
     }
 

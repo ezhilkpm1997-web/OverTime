@@ -59,10 +59,8 @@ object PdfExporter {
         var y = 40f
         
         // Header
-        canvas.drawText("GLOBE STEELS PVT LTD", 40f, y, headerPaint)
-        y += 20f
-        canvas.drawText("Overtime Tracker Report", 40f, y, textPaint.apply { isFakeBoldText = true; textSize = 14f })
-        y += 18f
+        canvas.drawText("Overtime Tracker Report", 40f, y, headerPaint)
+        y += 22f
         
         val dateRange = if (fromDate == toDate) fromDate else "$fromDate to $toDate"
         canvas.drawText("Date Range: $dateRange", 40f, y, subHeaderPaint)
@@ -91,9 +89,8 @@ object PdfExporter {
         
         workers.forEach { worker ->
             val workerLogs = (logsByWorker[worker.id] ?: emptyList()).sortedBy { it.date }
-            val totalMins = workerLogs.sumOf { it.mins }
             
-            if (totalMins > 0) {
+            if (workerLogs.isNotEmpty()) {
                 // Auto pagination handling
                 if (y > 780f) {
                     pdfDocument.finishPage(page)
@@ -172,7 +169,7 @@ object PdfExporter {
                 type = "application/pdf"
                 putExtra(Intent.EXTRA_STREAM, contentUri)
                 putExtra(Intent.EXTRA_SUBJECT, "OT Tracker Report ($fromDate to $toDate)")
-                putExtra(Intent.EXTRA_TEXT, "Globe Steels Overtime Report from $fromDate to $toDate")
+                putExtra(Intent.EXTRA_TEXT, "Overtime Report from $fromDate to $toDate")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             
@@ -192,7 +189,7 @@ object PdfExporter {
     ) {
         val dateRange = if (fromDate == toDate) fromDate else "$fromDate to $toDate"
         val builder = StringBuilder()
-        builder.append("*🏭 GLOBE STEELS – OVERTIME REPORT*\n")
+        builder.append("*🏭 OVERTIME REPORT*\n")
         builder.append("🗓 Period: $dateRange\n")
         if (weekLabel.isNotEmpty()) {
             builder.append("📋 Week: $weekLabel\n")
@@ -204,9 +201,8 @@ object PdfExporter {
 
         workers.forEach { worker ->
             val workerLogs = (logsByWorker[worker.id] ?: emptyList()).sortedBy { it.date }
-            val totalMins = workerLogs.sumOf { it.mins }
 
-            if (totalMins > 0) {
+            if (workerLogs.isNotEmpty()) {
                 val isQualitySection = isQualitySection(worker.section)
                 val emoji = if (isQualitySection) "🪖" else "👷"
                 

@@ -51,7 +51,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val viewModel: OTViewModel = androidx.lifecycle.viewmodel.compose.viewModel(factory = viewModelFactory)
-            MyApplicationTheme {
+            val darkThemeSetting by viewModel.darkThemeSetting.collectAsState()
+            val useDarkTheme = when (darkThemeSetting) {
+                "dark" -> true
+                "light" -> false
+                else -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+            MyApplicationTheme(darkTheme = useDarkTheme) {
                 OTTrackerApp(viewModel)
             }
         }
@@ -63,23 +69,25 @@ fun OTTrackerApp(viewModel: OTViewModel) {
     val selectedTab by viewModel.selectedTab.collectAsState()
     val weekLabel by viewModel.weekLabelSetting.collectAsState()
 
+    val isDark = com.example.ui.theme.LocalDarkTheme.current
+    val colorHeaderBg = if (isDark) Color(0xFF211F26) else Color(0xFFF7F2FA)
+    val colorTextPrimary = if (isDark) Color(0xFFE6E1E5) else Color(0xFF1D1B20)
+    val colorTextSecondary = if (isDark) Color(0xFFCAC4D0) else Color(0xFF49454F)
+    val colorBg = if (isDark) Color(0xFF141218) else Color(0xFFFDF8FD)
+    val colorAccent = if (isDark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
+    val colorAccentBg = if (isDark) Color(0xFF4F378B) else Color(0xFFE8DEF8)
+    val colorAccentText = if (isDark) Color(0xFFEADDFF) else Color(0xFF1D192B)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF7F2FA)) // High Density Light Purple Header
+                    .background(colorHeaderBg) // High Density Theme Header
                     .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = "GLOBE STEELS PVT LTD",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF49454F), // Darker subtitle text
-                    letterSpacing = 2.sp
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -89,11 +97,11 @@ fun OTTrackerApp(viewModel: OTViewModel) {
                         text = "⚙️ OT Tracker",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
-                        color = Color(0xFF1D1B20) // Deep dark Slate/Purple
+                        color = colorTextPrimary // Deep dark Slate/Purple or Light Purple
                     )
                     if (weekLabel.isNotEmpty()) {
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8DEF8)), // Soft purple pill container
+                            colors = CardDefaults.cardColors(containerColor = colorAccentBg), // Theme-derived pill container
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Row(
@@ -103,7 +111,7 @@ fun OTTrackerApp(viewModel: OTViewModel) {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
                                     contentDescription = "Week",
-                                    tint = Color(0xFF6750A4), // Primary Purple Icon
+                                    tint = colorAccent, // Theme-derived Icon
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -111,7 +119,7 @@ fun OTTrackerApp(viewModel: OTViewModel) {
                                     text = weekLabel,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF1D192B)
+                                    color = colorAccentText
                                 )
                             }
                         }
@@ -121,7 +129,7 @@ fun OTTrackerApp(viewModel: OTViewModel) {
         },
         bottomBar = {
             NavigationBar(
-                containerColor = Color(0xFFF7F2FA), // High Density Light purple bottom bar
+                containerColor = colorHeaderBg, // Dynamic bottom bar background
                 modifier = Modifier.navigationBarsPadding()
             ) {
                 val tabs = listOf(
@@ -138,17 +146,17 @@ fun OTTrackerApp(viewModel: OTViewModel) {
                         icon = { Icon(icon, contentDescription = label) },
                         label = { Text(label, fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1D192B),
-                            selectedTextColor = Color(0xFF1D192B),
-                            unselectedIconColor = Color(0xFF49454F),
-                            unselectedTextColor = Color(0xFF49454F),
-                            indicatorColor = Color(0xFFE8DEF8)
+                            selectedIconColor = colorAccentText,
+                            selectedTextColor = colorAccentText,
+                            unselectedIconColor = colorTextSecondary,
+                            unselectedTextColor = colorTextSecondary,
+                            indicatorColor = colorAccentBg
                         )
                     )
                 }
             }
         },
-        containerColor = Color(0xFFFDF8FD) // High Density Off-White background
+        containerColor = colorBg // Dynamic background
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -859,14 +867,13 @@ fun SummaryScreen(viewModel: OTViewModel) {
         allLogs.filter { it.date in fromDate..toDate && it.isChecked }
     }
 
-    // Process worker summaries: only display workers with >0 overtime hours in the filtered range
-    // "Export report Nan time kudukala na anga ethum katta kudathu"
+    // Process worker summaries: display workers with checked logs in the filtered range
     val workerSummaries = remember(workers, filteredLogs) {
         workers.map { worker ->
             val workerLogs = filteredLogs.filter { it.workerId == worker.id }
             val totalMins = workerLogs.sumOf { it.mins }
             Triple(worker, totalMins, workerLogs)
-        }.filter { it.second > 0 }
+        }.filter { it.third.isNotEmpty() }
     }
 
     val totalHrs = remember(workerSummaries) {
@@ -1544,6 +1551,8 @@ fun WorkersScreen(viewModel: OTViewModel) {
 fun SettingsScreen(viewModel: OTViewModel) {
     val context = LocalContext.current
     val weekLabel by viewModel.weekLabelSetting.collectAsState()
+    val darkThemeSetting by viewModel.darkThemeSetting.collectAsState()
+    val isDark = com.example.ui.theme.LocalDarkTheme.current
 
     var tempLabel by remember(weekLabel) { mutableStateOf(weekLabel) }
 
@@ -1557,8 +1566,8 @@ fun SettingsScreen(viewModel: OTViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, Color(0xFFEADDFF)),
+            colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF2B2930) else Color.White),
+            border = BorderStroke(1.dp, if (isDark) Color(0xFF49454F) else Color(0xFFEADDFF)),
             shape = RoundedCornerShape(12.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
@@ -1566,29 +1575,29 @@ fun SettingsScreen(viewModel: OTViewModel) {
                     text = "📅 Display Week Label",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6750A4)
+                    color = if (isDark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "This label will display at the top header of the application (e.g., '22.06.2026 to 27.06.2026').",
                     fontSize = 11.sp,
-                    color = Color(0xFF49454F)
+                    color = if (isDark) Color(0xFFCAC4D0) else Color(0xFF49454F)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = tempLabel,
                     onValueChange = { tempLabel = it },
-                    placeholder = { Text("e.g. 22.06.2026 to 27.06.2026", color = Color(0xFF49454F)) },
+                    placeholder = { Text("e.g. 22.06.2026 to 27.06.2026", color = if (isDark) Color(0xFF8B8890) else Color(0xFF49454F)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color(0xFF1D1B20),
-                        unfocusedTextColor = Color(0xFF1D1B20),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = Color(0xFF6750A4),
-                        unfocusedBorderColor = Color(0xFFCAC4D0)
+                        focusedTextColor = if (isDark) Color(0xFFE6E1E5) else Color(0xFF1D1B20),
+                        unfocusedTextColor = if (isDark) Color(0xFFE6E1E5) else Color(0xFF1D1B20),
+                        focusedContainerColor = if (isDark) Color(0xFF1D1B20) else Color.White,
+                        unfocusedContainerColor = if (isDark) Color(0xFF1D1B20) else Color.White,
+                        focusedBorderColor = if (isDark) Color(0xFFD0BCFF) else Color(0xFF6750A4),
+                        unfocusedBorderColor = if (isDark) Color(0xFF49454F) else Color(0xFFCAC4D0)
                     ),
                     singleLine = true
                 )
@@ -1600,7 +1609,10 @@ fun SettingsScreen(viewModel: OTViewModel) {
                         viewModel.saveWeekLabel(tempLabel)
                         Toast.makeText(context, "Week label saved!", Toast.LENGTH_SHORT).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6750A4), contentColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDark) Color(0xFFD0BCFF) else Color(0xFF6750A4),
+                        contentColor = if (isDark) Color(0xFF381E72) else Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1613,8 +1625,84 @@ fun SettingsScreen(viewModel: OTViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, Color(0xFFF9DEDC)),
+            colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF2B2930) else Color.White),
+            border = BorderStroke(1.dp, if (isDark) Color(0xFF49454F) else Color(0xFFEADDFF)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text(
+                    text = "🎨 UI Theme (Dark Mode)",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Choose light mode, dark mode, or follow system default settings.",
+                    fontSize = 11.sp,
+                    color = if (isDark) Color(0xFFCAC4D0) else Color(0xFF49454F)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val themeOptions = listOf(
+                        "system" to "System",
+                        "light" to "Light",
+                        "dark" to "Dark"
+                    )
+                    themeOptions.forEach { (key, label) ->
+                        val isSelected = darkThemeSetting == key
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isSelected) {
+                                        if (isDark) Color(0xFF4F378B) else Color(0xFFE8DEF8)
+                                    } else {
+                                        if (isDark) Color(0xFF1D1B20) else Color(0xFFF3EDF7)
+                                    }
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) {
+                                        if (isDark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
+                                    } else {
+                                        Color.Transparent
+                                    },
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable {
+                                    viewModel.setDarkThemeSetting(key)
+                                }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) {
+                                    if (isDark) Color(0xFFEADDFF) else Color(0xFF1D192B)
+                                } else {
+                                    if (isDark) Color(0xFFCAC4D0) else Color(0xFF49454F)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF2B2930) else Color.White),
+            border = BorderStroke(1.dp, if (isDark) Color(0xFF8C1D18) else Color(0xFFF9DEDC)),
             shape = RoundedCornerShape(12.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
@@ -1622,13 +1710,13 @@ fun SettingsScreen(viewModel: OTViewModel) {
                     text = "⚠️ Reset Operations",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFBA1A1A)
+                    color = if (isDark) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Be careful! Wiping database tables is irreversible.",
                     fontSize = 11.sp,
-                    color = Color(0xFF49454F)
+                    color = if (isDark) Color(0xFFCAC4D0) else Color(0xFF49454F)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -1637,7 +1725,10 @@ fun SettingsScreen(viewModel: OTViewModel) {
                         viewModel.clearAllOT()
                         Toast.makeText(context, "Overtime log data wiped successfully!", Toast.LENGTH_SHORT).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFDAD9), contentColor = Color(0xFF410002)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDark) Color(0xFF93000A) else Color(0xFFFFDAD9),
+                        contentColor = if (isDark) Color(0xFFFFDAD9) else Color(0xFF410002)
+                    ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1651,7 +1742,10 @@ fun SettingsScreen(viewModel: OTViewModel) {
                         viewModel.clearAll()
                         Toast.makeText(context, "All data wiped successfully!", Toast.LENGTH_SHORT).show()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA1A1A), contentColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDark) Color(0xFFBA1A1A) else Color(0xFFBA1A1A),
+                        contentColor = Color.White
+                    ),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
